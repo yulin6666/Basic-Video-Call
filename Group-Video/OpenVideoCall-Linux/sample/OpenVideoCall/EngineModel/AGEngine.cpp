@@ -49,14 +49,28 @@ bool AGEngine::joinChannel(const char* dynamicKey,
     int ret = -1;
     const char tmp[] = "0";
     if(m_agoraEngine) {
+        AParameter msp(*m_agoraEngine);
+        msp->setBool("che.audio.external_device", true);
+        msp->setInt("che.audio.audioSampleRate", 48000);
+        msp->setBool("che.video.keep_prerotation", false);
+        msp->setBool("che.video.server_mode", true);
+        msp->setInt("che.video.maxVideoFrameRate", 500);
+        msp->setBool("che.video.recording", true);
+        RtcEngineParameters rep(*m_agoraEngine);
+        int sampleRate = 48000;
+        int channels = 1;
+        int samplesPerCall = 480;
+        rep.setRecordingAudioFrameParameters(sampleRate, channels, RAW_AUDIO_FRAME_OP_MODE_WRITE_ONLY, samplesPerCall);
+        rep.setPlaybackAudioFrameParameters(sampleRate, channels, RAW_AUDIO_FRAME_OP_MODE_READ_ONLY, samplesPerCall);
+
+        // m_agoraEngine->setVideoProfile(360, 640, 15, 500);
+        msp->setInt("che.video.local.camera_index", 1024);
+        m_agoraEngine->enableVideo();
+
         if (!strcmp(tmp, dynamicKey)) {
             ret = m_agoraEngine->joinChannel(NULL, channelId, NULL, uid);
         } else {
             ret = m_agoraEngine->joinChannel(dynamicKey, channelId, NULL, uid);
-        }
-        if(ret == 0) {
-            AParameter msp(*m_agoraEngine);
-            msp->setInt("che.video.local.camera_index", 0);
         }
     }
 
