@@ -7,7 +7,7 @@
                  --channelProfile 1 \
                  --audioProfile 0 \
                  --audioScenario 0 \
-                 --videoProfile 0 \
+                 --videoProfile 30 \
                  --enableVideo 1 \
                  --enableAudio 1 \
                  --muteLocalVideo 0 \

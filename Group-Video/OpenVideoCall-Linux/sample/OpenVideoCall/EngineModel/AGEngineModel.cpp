@@ -3,6 +3,7 @@
 #include"AGCameraManager.h"
 #include"AGEventDef.h"
 #include"Controller/EngineController.h"
+#include"AGFrameObserver.h"
 
 #include<iostream>
 #include<string>
@@ -11,6 +12,7 @@ using std::cout;
 using std::endl;
 using std::string;
 using std::stringstream;
+using namespace agora::media;
 
 AGEngineModel AGEngineModel::m_model;
 
@@ -19,6 +21,8 @@ AGEngineModel* AGEngineModel::Get() {
 }
 
 AGEngineModel::AGEngineModel() {
+    m_audioObserver = NULL;
+    m_videoObserver = NULL;
 
     registerHandler(MSG_OPEN,(handler_ptr)&AGEngineModel::onOpenMsg);
     registerHandler(MSG_CLOSE, (handler_ptr)&AGEngineModel::onCloseMsg);
@@ -48,8 +52,23 @@ void AGEngineModel::initialize() {
     m_cameraMgr = new AGCameraManager();
 }
 
+void AGEngineModel::registerObserver() {
+    if(m_audioObserver == NULL) {
+        m_audioObserver = new AGAudioFrameObserver();
+    }
+    if (!m_engine->registerAudioFrameObserver(m_audioObserver))
+        cout << "Register Audio Observer Failed!" << endl;
+
+    if(m_videoObserver == NULL) {
+        m_videoObserver = new AGVideoFrameObserver();
+    }
+    if (!m_engine->registerVideoFrameObserver(m_videoObserver))
+        cout << "Register Video Observer Failed!" << endl;
+}
+
 bool AGEngineModel::onOpenMsg(void* msg) {
     cout << "AgoraRtcEngine:open" <<endl;
+    registerObserver();
 
     m_engine->setChannelProfile(m_cfg.channelProfile);
 
@@ -214,6 +233,19 @@ void AGEngineModel::release() {
     }
 
     if(m_engine) {
+        m_engine->registerVideoFrameObserver(NULL);
+        m_engine->registerAudioFrameObserver(NULL);
+
+        if(m_audioObserver) {
+            delete m_audioObserver;
+            m_audioObserver = NULL;
+        }
+
+        if(m_videoObserver) {
+            delete m_videoObserver;
+            m_videoObserver = NULL;
+        }
+
         delete m_engine;
         m_engine = NULL;
     }
@@ -222,9 +254,14 @@ void AGEngineModel::release() {
 
 void AGEngineModel::onEvent(int id, void* pData) {
     switch(id) {
-        case EID_JOINCHANNEL_SUCCESS: 
-            m_cameraMgr->create(m_engine->getRtcEngine());
+        case EID_JOINCHANNEL_SUCCESS:
+        {
+            IRtcEngine* engine = m_engine->getRtcEngine();
+            AParameter msp(*engine);
+            msp->setBool("che.video.server_mode", true);
+
             break;
+        }
         default:
             break;
     }

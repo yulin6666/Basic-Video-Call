@@ -177,8 +177,8 @@ enum AUDIO_PROFILE_TYPE // sample rate, bit rate, mono/stereo, speech/music code
 {
     AUDIO_PROFILE_DEFAULT = 0, // use default settings
     AUDIO_PROFILE_SPEECH_STANDARD = 1, // 32Khz, 18kbps, mono, speech
-    AUDIO_PROFILE_MUSIC_STANDARD = 2, // 48Khz, 50kbps, mono, music
-    AUDIO_PROFILE_MUSIC_STANDARD_STEREO = 3, // 48Khz, 50kbps, stereo, music
+    AUDIO_PROFILE_MUSIC_STANDARD = 2, // 48Khz, 48kbps, mono, music
+    AUDIO_PROFILE_MUSIC_STANDARD_STEREO = 3, // 48Khz, 56kbps, stereo, music
     AUDIO_PROFILE_MUSIC_HIGH_QUALITY = 4, // 48Khz, 128kbps, mono, music
     AUDIO_PROFILE_MUSIC_HIGH_QUALITY_STEREO = 5, // 48Khz, 192kbps, stereo, music
     AUDIO_PROFILE_NUM = 6,
@@ -187,11 +187,11 @@ enum AUDIO_PROFILE_TYPE // sample rate, bit rate, mono/stereo, speech/music code
 enum AUDIO_SCENARIO_TYPE // set a suitable scenario for your app type
 {
     AUDIO_SCENARIO_DEFAULT = 0,
-    AUDIO_SCENARIO_CHATROOM_GAMING = 1,
-    AUDIO_SCENARIO_CHATROOM_ENTERTAINMENT = 2,
-    AUDIO_SCENARIO_EDUCATION = 3,
-    AUDIO_SCENARIO_GAME_STREAMING = 4,
-    AUDIO_SCENARIO_SHOWROOM = 5,
+    AUDIO_SCENARIO_CHATROOM_ENTERTAINMENT = 1,
+    AUDIO_SCENARIO_EDUCATION = 2,
+    AUDIO_SCENARIO_GAME_STREAMING = 3,
+    AUDIO_SCENARIO_SHOWROOM = 4,
+    AUDIO_SCENARIO_CHATROOM_GAMING = 5,
     AUDIO_SCENARIO_NUM = 6,
 };
 
@@ -411,8 +411,8 @@ typedef struct TranscodingUser {
 
 } TranscodingUser;
     
-typedef struct VideoWatermark {
-    VideoWatermark() :
+typedef struct RtcImage {
+    RtcImage() :
        url(nullptr),
        x(0),
        y(0),
@@ -424,7 +424,7 @@ typedef struct VideoWatermark {
     int y;
     int width;
     int height;
-} VideoWatermark;
+} RtcImage;
 
 typedef struct LiveTranscoding {
     int width;
@@ -440,7 +440,7 @@ typedef struct LiveTranscoding {
     unsigned int userCount;
     TranscodingUser *transcodingUsers;
     const char *transcodingExtraInfo;
-    VideoWatermark* watermark;
+    RtcImage* watermark;
 
     AUDIO_SAMPLE_RATE_TYPE audioSampleRate;
     int audioBitrate;
@@ -1090,20 +1090,6 @@ public:
     virtual void onTranscodingUpdated() {
     }
 
-    virtual void onPublishingRequestAnswered(uid_t owner, int response, int error) {
-        (void)owner;
-        (void)response;
-        (void)error;
-    }
-
-    virtual void onPublishingRequestReceived(uid_t uid) {
-        (void)uid;
-    }
-
-    virtual void onUnpublishingRequestReceived(uid_t owner) {
-        (void)owner;
-    }
-
     virtual void onStreamInjectedStatus(const char* url, uid_t uid, int status) {
         (void)url;
         (void)uid;
@@ -1598,7 +1584,7 @@ public:
     virtual int removePublishStreamUrl(const char *url) = 0;
     virtual int setLiveTranscoding(const LiveTranscoding &transcoding) = 0;
     
-    virtual int addVideoWatermark(const VideoWatermark& watermark) = 0;
+    virtual int addVideoWatermark(const RtcImage& watermark) = 0;
     virtual int clearVideoWatermarks() = 0;
 
     virtual int addInjectStreamUrl(const char* url, const InjectStreamConfig& config) = 0;
@@ -2074,6 +2060,7 @@ public:
             "{\"soundId\":%d,\"gain\":%d}",
             soundId, volume);
     }
+    
     /**
      * To play effect
      * @param [in] soundId
@@ -2098,7 +2085,7 @@ public:
      * @return return 0 on success, error code otherwise.
      *      
      */
-    int playEffect(int soundId, const char* filePath, int loopCount, double pitch, double pan, int gain, bool publish) {
+    int playEffect(int soundId, const char* filePath, int loopCount, double pitch, double pan, int gain, bool publish = false) {
 #if defined(_WIN32)
         util::AString path;
         if (!m_parameter->convertPath(filePath, path))
@@ -2379,6 +2366,10 @@ public:
             volume = 400;
         return m_parameter ? m_parameter->setInt("che.audio.playout.signal.volume", volume) : -ERR_NOT_INITIALIZED;
     }
+    /**
+     * @Deprecated. Agora does not recommend using this method.
+     * If you want to set the audio profile, see Set the Audio Profile (setAudioProfile).
+     */
     int setHighQualityAudioParameters(bool fullband, bool stereo, bool fullBitrate) {
         return setObject("che.audio.codec.hq", "{\"fullband\":%s,\"stereo\":%s,\"fullBitrate\":%s}", fullband ? "true" : "false", stereo ? "true" : "false", fullBitrate ? "true" : "false");
     }
@@ -2388,19 +2379,6 @@ public:
     //only for live broadcasting
     int setVideoQualityParameters(bool preferFrameRateOverImageQuality) {
         return setParameters("{\"rtc.video.prefer_frame_rate\":%s,\"che.video.prefer_frame_rate\":%s}", preferFrameRateOverImageQuality ? "true" : "false", preferFrameRateOverImageQuality ? "true" : "false");
-    }
-
-    int sendPublishingRequest(uid_t owner) {
-        return m_parameter->setUInt("rtc.req.join_publisher", owner);
-    }
-
-    int answerPublishingRequest(uid_t uid, bool accepted) {
-        //return setObject("rtc.res.join_publisher", "{\"uid\":%u, \"accepted\": %d}", uid, (int)accepted);
-        return setParameters("{\"rtc.res.join_publisher\":{\"uid\":%u, \"accepted\": %d}}", uid, (int)accepted);
-    }
-
-    int sendUnpublishingRequest(uid_t uid) {
-        return m_parameter->setUInt("rtc.req.remove_publisher", uid);
     }
 
 	int enableLoopbackRecording(bool enabled) {

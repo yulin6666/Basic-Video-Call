@@ -9,6 +9,9 @@ class EngineController;
 class AGEngine;
 class AGCameraManager;
 
+class AGAudioFrameObserver;
+class AGVideoFrameObserver;
+
 class AGEngineModel : public MsgHandler
                       ,public IAGEventReceiver
 {
@@ -39,10 +42,17 @@ class AGEngineModel : public MsgHandler
         bool onMuteRemote(void *msg);
 
         void release(); 
+
+    private:
+        void registerObserver();
+
     private:
         AGEngineEventHandler m_engineEventHandler;
         AGEngine*   m_engine;
         AGCameraManager*  m_cameraMgr;
+
+        AGAudioFrameObserver* m_audioObserver;
+        AGVideoFrameObserver* m_videoObserver;
 
         AppConfig m_cfg;
 

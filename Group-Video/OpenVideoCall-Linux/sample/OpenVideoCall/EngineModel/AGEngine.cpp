@@ -3,6 +3,8 @@
 
 #include "IAgoraRtcEngine.h"
 #include "AGEngine.h"
+#include "IAgoraMediaEngine.h"
+#include "AgoraBase.h"
 #include <iostream>
 
 AGEngine::AGEngine(IRtcEngineEventHandler* handler, const char* appId)
@@ -55,7 +57,7 @@ bool AGEngine::joinChannel(const char* dynamicKey,
         msp->setBool("che.video.keep_prerotation", false);
         msp->setBool("che.video.server_mode", true);
         msp->setInt("che.video.maxVideoFrameRate", 500);
-        msp->setBool("che.video.recording", true);
+        msp->setBool("che.video.recording", false);
         RtcEngineParameters rep(*m_agoraEngine);
         int sampleRate = 48000;
         int channels = 1;
@@ -290,5 +292,27 @@ bool AGEngine::release()
     }
 
     return true;
+}
+
+bool AGEngine::registerVideoFrameObserver(IVideoFrameObserver* videoObserver) {
+    agora::util::AutoPtr<agora::media::IMediaEngine> mediaEngine;
+    mediaEngine.queryInterface(m_agoraEngine, agora::AGORA_IID_MEDIA_ENGINE);
+    if(mediaEngine) {
+        mediaEngine->registerVideoFrameObserver(videoObserver);
+        return true;
+    }
+
+    return false;
+}
+
+bool AGEngine::registerAudioFrameObserver(IAudioFrameObserver* audioObserver) {
+    agora::util::AutoPtr<agora::media::IMediaEngine> mediaEngine;
+    mediaEngine.queryInterface(m_agoraEngine, agora::AGORA_IID_MEDIA_ENGINE);
+    if(mediaEngine) {
+        mediaEngine->registerAudioFrameObserver(audioObserver);
+        return true;
+    }
+
+    return false;
 }
 

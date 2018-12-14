@@ -8,9 +8,15 @@ namespace agora {
         class IRtcEngine;
         class RtcEngineParameters;
     }
+
+    namespace media {
+        class IAudioFrameObserver;
+        class IVideoFrameObserver;
+    }
 }
 
 using namespace agora::rtc;
+using namespace agora::media;
 using std::string;
 
 class AGEngine 
@@ -66,6 +72,10 @@ class AGEngine
         bool sendChatMessage(int streamId, const char* chatMessage);
         
         bool enableWebSdkInteroperability(bool enable);
+
+        bool registerVideoFrameObserver(IVideoFrameObserver* videoObserver);
+
+        bool registerAudioFrameObserver(IAudioFrameObserver* audioObserver);
 
         bool setChannelProfile(int profile);
 
