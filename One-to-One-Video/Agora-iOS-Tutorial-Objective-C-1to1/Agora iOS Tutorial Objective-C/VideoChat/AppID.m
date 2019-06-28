@@ -8,6 +8,6 @@
 
 #import <Foundation/Foundation.h>
 
-NSString *const appID = @"<#Your App ID#>";
+NSString *const appID = @"c03486ad768c4bc59779d0653f126544";
 // assign token to nil if you have not enabled app certificate
-NSString *const token = @"<#Temp Token#>";
+NSString *const token = @"f960c15128184e459a99b884876d006f";

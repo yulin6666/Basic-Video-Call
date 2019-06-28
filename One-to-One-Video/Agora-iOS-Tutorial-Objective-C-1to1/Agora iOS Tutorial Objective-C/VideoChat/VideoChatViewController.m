@@ -60,7 +60,7 @@
     // UID = 0 means we let Agora pick a UID for us
     
     videoCanvas.view = self.localVideo;
-    videoCanvas.renderMode = AgoraVideoRenderModeHidden;
+    videoCanvas.renderMode = AgoraVideoRenderModeFit;
     [self.agoraKit setupLocalVideo:videoCanvas];
     // Bind local video stream to view
 }
